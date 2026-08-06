@@ -2,6 +2,8 @@ import base64
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 import cv2
 import numpy as np
@@ -91,6 +93,37 @@ class TrainingParamsTest(unittest.TestCase):
 
 
 class GestureRankingTest(unittest.TestCase):
+    def test_each_recognizer_receives_independent_image_storage(self):
+        class FakeRecognizer:
+            def __init__(self):
+                self.images = []
+
+            def recognize_for_video(self, image, _timestamp):
+                self.images.append(image)
+                return SimpleNamespace(
+                    hand_landmarks=[], handedness=[], gestures=[]
+                )
+
+        manager = web_app.RecognizerManager()
+        baseline = FakeRecognizer()
+        label_a = FakeRecognizer()
+        label_b = FakeRecognizer()
+        model_path = web_app.ROOT / "custom.task"
+        manager._baseline_recognizer = baseline
+        manager._model_recognizers = {"none": label_a, "ok": label_b}
+        manager._model_path = model_path
+
+        with mock.patch.object(
+            web_app.mp.Image,
+            "__new__",
+            side_effect=lambda *_args, **_kwargs: object(),
+        ):
+            manager.predict(np.zeros((64, 96, 3), dtype=np.uint8), model_path)
+
+        images = baseline.images + label_a.images + label_b.images
+        self.assertEqual(3, len(images))
+        self.assertEqual(3, len({id(image) for image in images}))
+
     def test_extracts_custom_labels_from_exported_task(self):
         models = sorted(web_app.EXPORT_DIR.glob("*/gesture_recognizer.task"))
         if not models:

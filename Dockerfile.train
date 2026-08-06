@@ -1,0 +1,26 @@
+FROM python:3.10-slim
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TF_CPP_MIN_LOG_LEVEL=1
+
+WORKDIR /workspace
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt constraints-train.txt ./
+RUN python -m pip install --upgrade pip \
+    && python -m pip install -r requirements.txt
+
+# Model Maker 0.2.1.4 allows a newer tensorflow-metadata to drift in. Recent
+# releases generate protobuf code that requires protobuf 5+, while TensorFlow
+# 2.15 and MediaPipe 0.10.14 use protobuf 4. Keep the contemporary metadata
+# package; --no-deps intentionally preserves the validated protobuf runtime.
+RUN python -m pip install --no-deps --force-reinstall tensorflow-metadata==1.15.0
+
+COPY train.py ./
+
+ENTRYPOINT ["python", "train.py"]

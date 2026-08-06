@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3f0e8">
+  <title>Gesture Lab · 本地手势训练台</title>
+  <meta name="description" content="在本地完成手势采集、模型训练和实时测试。">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Gesture Lab 首页">
+      <span class="brand-mark">G</span>
+      <span><strong>GESTURE LAB</strong><small>LOCAL / PRIVATE</small></span>
+    </a>
+    <section class="metrics" aria-label="项目状态">
+      <article class="metric-card">
+        <span class="metric-index">01</span>
+        <div><small>DATASET</small><strong id="metricSamples">0 张样本</strong></div>
+      </article>
+      <article class="metric-card">
+        <span class="metric-index">02</span>
+        <div><small>GESTURES</small><strong id="metricLabels">0 个手势</strong></div>
+      </article>
+      <article class="metric-card">
+        <span class="metric-index">03</span>
+        <div><small>TRAINING CORE</small><strong id="metricEnvironment">检查中</strong></div>
+      </article>
+      <article class="metric-card">
+        <span class="metric-index">04</span>
+        <div><small>MODELS</small><strong id="metricModels">0 个可用</strong></div>
+      </article>
+    </section>
+    <div class="top-status">
+      <span class="status-dot"></span>
+      <span id="topStatusText">正在连接本地服务</span>
+    </div>
+  </header>
+
+  <main id="top">
+    <nav class="workflow-nav" aria-label="工作流程">
+      <button class="workflow-tab active" data-panel="collect">
+        <span>1</span><strong>采集数据</strong><small>COLLECT</small>
+      </button>
+      <div class="flow-line" aria-hidden="true"></div>
+      <button class="workflow-tab" data-panel="train">
+        <span>2</span><strong>训练模型</strong><small>TRAIN</small>
+      </button>
+      <div class="flow-line" aria-hidden="true"></div>
+      <button class="workflow-tab" data-panel="test">
+        <span>3</span><strong>实时测试</strong><small>TEST</small>
+      </button>
+    </nav>
+
+    <section id="panel-collect" class="workspace-panel active">
+      <div class="section-heading">
+        <div><p class="eyebrow">STEP 01 / COLLECT</p><h2>采集训练样本</h2></div>
+        <p>选中一个标签，保持手势稳定，再从不同角度、距离和光线连续采集。</p>
+      </div>
+
+      <div class="work-grid collect-grid">
+        <article class="camera-card">
+          <div class="card-head">
+            <span class="live-badge"><i></i> CAMERA</span>
+            <span id="captureLabelBadge" class="soft-badge">当前：none</span>
+          </div>
+          <div class="camera-stage" id="captureStage">
+            <video id="captureVideo" playsinline muted></video>
+            <div class="camera-placeholder" id="capturePlaceholder">
+              <div class="focus-frame"><span></span><span></span><span></span><span></span></div>
+              <strong>摄像头尚未开启</strong>
+              <small>画面只在本机浏览器与本地服务之间传递</small>
+            </div>
+            <div class="capture-flash" id="captureFlash"></div>
+          </div>
+          <div class="camera-actions">
+            <button id="startCaptureCamera" class="button secondary">开启摄像头</button>
+            <button id="captureOnce" class="button primary" disabled>采集一张</button>
+          </div>
+          <div class="auto-capture">
+            <label class="switch-row">
+              <input id="autoCaptureToggle" type="checkbox" disabled>
+              <span class="switch"></span>
+              <span><strong>连续采集</strong><small>按固定间隔自动保存</small></span>
+            </label>
+            <label class="field compact"><span>间隔</span><select id="captureInterval">
+              <option value="250">0.25 秒</option>
+              <option value="400">0.4 秒</option>
+              <option value="600">0.6 秒</option>
+              <option value="1000">1 秒</option>
+            </select></label>
+          </div>
+          <canvas id="captureCanvas" hidden></canvas>
+        </article>
+
+        <aside class="dataset-card">
+          <div class="card-head"><div><p class="eyebrow">LABELS</p><h3>手势标签</h3></div><span id="datasetTotal" class="count-pill">0</span></div>
+          <form id="labelForm" class="label-form">
+            <label class="field grow"><span>新增标签</span><input id="newLabel" maxlength="40" placeholder="例如：ok、one、five" autocomplete="off"></label>
+            <button class="icon-button" type="submit" aria-label="添加标签">＋</button>
+          </form>
+          <div id="labelList" class="label-list"></div>
+          <div class="guidance">
+            <strong>采集建议</strong>
+            <ul>
+              <li>只添加当前模型实际需要的手势</li>
+              <li><code>none</code> 只拍不属于全部类别的动作</li>
+              <li>已有的 none 样本请人工复核</li>
+              <li>左右手、远近和背景尽量多样</li>
+            </ul>
+          </div>
+        </aside>
+        <article class="gallery-card">
+          <div class="card-head"><div><p class="eyebrow">RECENT CAPTURES</p><h3 id="galleryTitle">none 的最近样本</h3></div><span id="galleryCount" class="soft-badge">0 张</span></div>
+          <div id="sampleGallery" class="sample-gallery"><p class="empty-state">还没有样本，开启摄像头开始采集。</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="panel-train" class="workspace-panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">STEP 02 / TRAIN</p><h2>训练独立分类模型</h2></div>
+        <p>固定使用 MediaPipe Model Maker 0.2.1.4。本次数据集里的标签共同组成一个独立模型。</p>
+      </div>
+
+      <div id="environmentBanner" class="environment-banner checking">
+        <div class="env-icon">M</div>
+        <div class="grow"><small>TRAINING ENVIRONMENT</small><strong id="environmentTitle">正在检查训练环境</strong><p id="environmentDescription">请稍候…</p></div>
+        <button id="buildEnvironment" class="button secondary" disabled>准备训练环境</button>
+      </div>
+
+      <div class="work-grid train-grid">
+        <article class="form-card">
+          <div class="card-head"><div><p class="eyebrow">CONFIGURATION</p><h3>训练参数</h3></div><span class="version-pill">v0.2.1.4</span></div>
+          <form id="trainingForm" class="training-form">
+            <label class="field full"><span>模型名称</span><input name="model_name" placeholder="例如：classroom-gestures" maxlength="40"><small>仅支持字母、数字、下划线和短横线</small></label>
+            <label class="field"><span>训练轮数</span><input name="epochs" type="number" min="1" max="500" value="20"></label>
+            <label class="field"><span>批大小</span><select name="batch_size"><option>2</option><option>4</option><option selected>8</option><option>16</option><option>32</option></select></label>
+            <label class="field"><span>学习率</span><input name="learning_rate" type="number" step="0.0001" value="0.001"></label>
+            <label class="field"><span>Dropout</span><input name="dropout_rate" type="number" min="0" max="0.9" step="0.01" value="0.05"></label>
+            <div id="readinessCard" class="readiness-card full"></div>
+            <button id="startTraining" class="button primary full" type="submit" disabled>开始训练</button>
+          </form>
+        </article>
+
+        <article class="job-card">
+          <div class="card-head"><div><p class="eyebrow">LIVE JOB</p><h3>训练进度</h3></div><span id="jobStatus" class="soft-badge">IDLE</span></div>
+          <div class="progress-wrap">
+            <div class="progress-number"><strong id="progressValue">0%</strong><span id="jobMessage">暂无任务</span></div>
+            <div class="progress-track"><i id="progressBar"></i></div>
+            <div class="progress-meta"><span id="epochValue">等待开始</span><span id="jobTime">—</span></div>
+          </div>
+          <div class="terminal">
+            <div class="terminal-head"><span></span><span></span><span></span><small>TRAINING LOG</small></div>
+            <pre id="jobLogs">训练日志会显示在这里。</pre>
+          </div>
+          <button id="cancelJob" class="text-button danger" disabled>取消当前任务</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="panel-test" class="workspace-panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">STEP 03 / TEST</p><h2>实时测试模型</h2></div>
+        <p>选择任一次训练生成的独立模型；Top 5 来自该模型自身，官方预置模型仅作基线参考。</p>
+      </div>
+
+      <div class="test-toolbar">
+        <label class="field grow"><span>独立分类模型</span><select id="modelSelect"><option value="">正在读取模型…</option></select><small id="modelHint">正在检查模型标签…</small></label>
+        <button id="refreshModels" class="button ghost">刷新模型</button>
+        <button id="startTesting" class="button primary">开始实时测试</button>
+      </div>
+
+      <div class="work-grid test-grid">
+        <article class="camera-card test-camera-card">
+          <div class="card-head"><span class="live-badge"><i></i> LIVE INFERENCE</span><span id="inferenceSpeed" class="soft-badge">— ms</span></div>
+          <div class="camera-stage test-stage">
+            <video id="testVideo" playsinline muted></video>
+            <canvas id="landmarkCanvas"></canvas>
+            <div class="camera-placeholder" id="testPlaceholder">
+              <div class="focus-frame"><span></span><span></span><span></span><span></span></div>
+              <strong>等待测试</strong><small>选择模型后开启摄像头</small>
+            </div>
+          </div>
+        </article>
+
+        <aside class="prediction-card">
+          <div class="card-head"><div><p class="eyebrow">MODEL PREDICTION</p><h3>当前模型 + 官方基线</h3></div><span id="handCount" class="count-pill">0 HANDS</span></div>
+          <div id="predictionList" class="prediction-list">
+            <div class="prediction-empty"><span>⌁</span><strong>等待手势</strong><small>将手掌放到镜头中央</small></div>
+          </div>
+          <div class="privacy-note"><span>●</span><p><strong>本地推理</strong><br>测试画面不会上传至外部服务。</p></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>GESTURE LAB / LOCAL</span><p>MediaPipe Tasks · Model Maker 0.2.1.4</p><span>2026</span></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

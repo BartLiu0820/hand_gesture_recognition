@@ -1,0 +1,3 @@
+# Keep this exact version: training compatibility is part of the project contract.
+-c constraints-train.txt
+mediapipe-model-maker==0.2.1.4

@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Local data and generated models can be large or private.
+data/
+models/*.task
+exported_model/

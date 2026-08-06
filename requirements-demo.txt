@@ -1,0 +1,6 @@
+# Lightweight, reproducible environment for running the camera demo only.
+# These versions are compatible with models exported by Model Maker 0.2.1.4.
+mediapipe==0.10.14
+opencv-contrib-python==4.10.0.84
+numpy==1.26.4
+Flask==3.0.3

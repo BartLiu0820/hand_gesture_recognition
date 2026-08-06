@@ -1,0 +1,19 @@
+{
+  "model_id": "ok-20260806-134328",
+  "case_sensitive": true,
+  "unknown_label_policy": "log_and_ignore",
+  "mappings": [
+    {
+      "model_label": "none",
+      "unity_action": null,
+      "trigger_business_action": false,
+      "description": "Background/non-target gesture."
+    },
+    {
+      "model_label": "ok",
+      "unity_action": "ok",
+      "trigger_business_action": true,
+      "description": "Recognized OK gesture. Replace unity_action only if the project uses a different event name."
+    }
+  ]
+}

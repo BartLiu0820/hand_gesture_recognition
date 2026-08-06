@@ -1,0 +1,12 @@
+# Reproducible dependency set for mediapipe-model-maker 0.2.1.4.
+# tensorflow-text 2.15 has a Linux x86_64 wheel but no macOS/ARM64 wheel;
+# use Dockerfile.train with --platform linux/amd64 on an Apple Silicon Mac.
+mediapipe==0.10.14
+tensorflow==2.15.1
+tensorflow-text==2.15.0
+tf-models-official==2.15.0
+numpy==1.26.4
+opencv-python==4.10.0.84
+opencv-contrib-python==4.10.0.84
+opencv-python-headless==4.10.0.84
+protobuf==4.25.3

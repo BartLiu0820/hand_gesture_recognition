@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "model_id": "ok-20260806-134328",
+  "architecture": "independent_gesture_classifier",
+  "created_at": "2026-08-06T13:44:09+08:00",
+  "source_model": {
+    "path": "models/gesture_recognizer.task",
+    "size_bytes": 8459826,
+    "sha256": "20db31e5c2cf148703124440d8b946ce11ac799305541a1d59af5c1e4e940695"
+  },
+  "unity_model": {
+    "path": "unity/ai/mediapipe/gesture_recognizer.bytes",
+    "size_bytes": 8459826,
+    "sha256": "20db31e5c2cf148703124440d8b946ce11ac799305541a1d59af5c1e4e940695",
+    "note": "Binary-identical copy of the .task model, renamed for Unity TextAsset loading."
+  },
+  "labels": [
+    "none",
+    "ok"
+  ],
+  "background_label": "none",
+  "target_labels": [
+    "ok"
+  ],
+  "training": {
+    "mediapipe_model_maker_version": "0.2.1.4",
+    "epochs": 20,
+    "batch_size": 8,
+    "learning_rate": 0.001,
+    "dropout_rate": 0.05,
+    "train_fraction": 0.8,
+    "validation_fraction": 0.1,
+    "test_fraction": 0.1,
+    "seed": 42
+  },
+  "evaluation": {
+    "loss": null,
+    "accuracy": null,
+    "status": "not_preserved_with_existing_export",
+    "note": "Do not infer test metrics from training checkpoints. Perform Unity device acceptance with held-out samples."
+  },
+  "embedded_metadata": {
+    "global_score_threshold": 0.5
+  },
+  "reused_components": [
+    "palm_detector",
+    "hand_landmarker",
+    "gesture_embedder"
+  ],
+  "unity_top5_required": false,
+  "unknown_label_policy": "log_and_ignore"
+}

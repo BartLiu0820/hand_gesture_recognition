@@ -544,16 +544,27 @@ class RecognizerManager:
             if not self._model_recognizers or self._model_path != model_path:
                 self._load(model_path)
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
             now_ms = time.monotonic_ns() // 1_000_000
             self._timestamp_ms = max(now_ms, self._timestamp_ms + 1)
-            baseline_result = self._baseline_recognizer.recognize_for_video(
-                image, self._timestamp_ms
+            # A MediaPipe task turns the input into a Packet whose holder may be
+            # consumed by its graph. Reusing one mp.Image across independent task
+            # runners can leave the downstream tensor packet with multiple owners
+            # and fail in ConcatenateTensorVectorCalculator. Give every runner its
+            # own image storage instead.
+            baseline_image = mp.Image(
+                image_format=mp.ImageFormat.SRGB, data=rgb.copy()
             )
-            model_results = {
-                label: recognizer.recognize_for_video(image, self._timestamp_ms)
-                for label, recognizer in self._model_recognizers.items()
-            }
+            baseline_result = self._baseline_recognizer.recognize_for_video(
+                baseline_image, self._timestamp_ms
+            )
+            model_results = {}
+            for label, recognizer in self._model_recognizers.items():
+                model_image = mp.Image(
+                    image_format=mp.ImageFormat.SRGB, data=rgb.copy()
+                )
+                model_results[label] = recognizer.recognize_for_video(
+                    model_image, self._timestamp_ms
+                )
 
         hands = []
         for index, landmarks in enumerate(baseline_result.hand_landmarks):

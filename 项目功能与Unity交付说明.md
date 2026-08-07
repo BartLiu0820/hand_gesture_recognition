@@ -125,57 +125,42 @@ exported_model/<模型名-时间>/
 
 ## 7. Unity 交付内容
 
-每个模型建立独立 ZIP 交付包。标准目录结构为：
+根据 2026-08-07 与 Unity 开发确认的结果，每个模型建立独立的最小 ZIP 交付包。ZIP 根目录只包含两项：
 
 ```text
-<model-delivery>/
-├── unity/ai/mediapipe/gesture_recognizer.bytes
-├── models/gesture_recognizer.task
-├── model_manifest.json
-├── label_mapping.json
-├── README_Unity.md
-├── checksums.sha256
-└── acceptance/                         # 正式验收时补充
-    ├── evidence/                       # 未参与训练的图片或视频
-    └── acceptance_report.md            # 逐类验收与已知问题
+model_manifest.json
+models/
+└── gesture_recognizer.task
 ```
 
-### 7.1 模型替换必交项
+### 7.1 交付项
 
-1. `unity/ai/mediapipe/gesture_recognizer.bytes`：Unity 可直接覆盖目标资源的模型。
-2. `models/gesture_recognizer.task`：MediaPipe 原始模型，用于归档和非 Unity 环境验证。`.bytes` 应与它二进制完全相同，只有扩展名不同。
-3. `model_manifest.json`：记录标签、版本、训练参数、模型路径、文件大小和 SHA-256。如旧训练产物未保存可靠的测试指标，loss/accuracy 必须写为 `null` 并注明未保存，不得猜测。
-4. `label_mapping.json`：模型原始标签到 Unity 业务动作的映射，同时记录大小写和未知标签处理规则。
-5. `README_Unity.md`：接入路径、替换方法、标签规则、score 约定及验收步骤。
-6. `checksums.sha256`：包内关键文件的完整性校验值。
+1. `model_manifest.json`：模型清单，记录模型相对路径、标签、版本、训练参数、文件大小和 SHA-256。如旧训练产物未保存可靠的测试指标，loss/accuracy 必须写为 `null` 并注明未保存，不得猜测。
+2. `models/gesture_recognizer.task`：当次正式 MediaPipe 手势模型。
 
-### 7.2 正式验收补充项
+### 7.2 不再放入 ZIP 的内容
 
-1. `acceptance/evidence/`：未参与训练的验收图片或视频。
-2. `acceptance/acceptance_report.md`：逐类验收记录、目标设备与版本、阈值/防抖配置、误触发、漏识别和已知易混淆场景。
+- `gesture_recognizer.bytes` 副本。
+- `label_mapping.json`。
+- `README_Unity.md`。
+- `checksums.sha256`。
+- 验收图片、视频和验收报告。
+- 训练权重、checkpoint、epoch 模型和日志。
 
-模型替换包可先交付 7.1 的必交项；正式验收前必须补齐 7.2。如验收材料尚未准备，必须明确标记“待补充”，不能在交付清单中写成已完成。
-
-不同模型的模型文件、清单和标签表不可混用。Unity 应在替换模型时同步更新该模型的标签映射配置。
+上述内容如仍有协作需求，在 Unity 工程、验收流程或其他文档中单独管理，不再作为模型 ZIP 交付物。不同模型的 `.task` 和 `model_manifest.json` 不可混用。
 
 ### 7.3 当前 `ok-20260806-134328` 交付状态
 
 - 已生成 `deliverables/unity_gesture_ok_20260806.zip`。
-- 7.1 的模型替换必交项已齐全，且 ZIP 完整性校验通过。
-- 7.2 的独立验收图片/视频和已完成的验收记录尚未提供，当前状态为“待补充”。
+- ZIP 根目录只有 `model_manifest.json` 和 `models/` 两项。
+- `models/` 中只有 `gesture_recognizer.task`。
 - 原训练目录未保存可靠的测试集 loss/accuracy，交付清单中已以 `null` 和说明文字如实记录。
 
 ## 8. Unity 接入要求
 
 ### 8.1 模型替换
 
-根据现有共享方案，Unity 工程中的目标模型资源为：
-
-```text
-ai/mediapipe/gesture_recognizer.bytes
-```
-
-开发可直接使用交付包中的 `unity/ai/mediapipe/gesture_recognizer.bytes` 覆盖该资源。它与包内 `models/gesture_recognizer.task` 二进制完全相同，不需要转换模型格式。若目标工程路径或资源打包方式已经变化，以实际 Unity 工程为准。
+开发从交付包的 `models/gesture_recognizer.task` 取得模型。模型在 Unity 工程中的最终路径、扩展名和资源打包方式由 Unity 开发维护，不在此 ZIP 中额外提供 `.bytes` 副本。
 
 ### 8.2 必须实现
 
@@ -183,7 +168,7 @@ Unity 必须：
 
 - 使用当前模型自定义分类头的结果作为业务判定。
 - 消费原始字符串标签，不能只依赖官方手势枚举。
-- 按该模型自己的 `model_manifest.json` 建立标签映射。
+- 使用该模型自己的 `model_manifest.json` 核对标签和模型完整性；业务标签映射由 Unity 工程自身管理。
 - 将小写 `none` 作为无业务动作。
 - 保留 MediaPipe 返回的真实 score，不伪造、缩放或跨模型替换。
 - 对未知标签记录日志，不能静默映射为 `none`。
@@ -205,7 +190,7 @@ Unity 必须：
 - `none` 不触发业务动作。
 - 阈值处理前的 score 与 MediaPipe 原始值一致。
 - 未加入当前模型的手势不会被误认为“官方自动支持”。
-- 模型替换时同步替换标签映射配置。
+- 模型替换时，Unity 工程内的标签映射配置与清单标签保持一致。
 - 左右手、远近、复杂背景和连续切换手势均通过测试。
 - 未接入 Top 5 不影响本次交付验收。
 

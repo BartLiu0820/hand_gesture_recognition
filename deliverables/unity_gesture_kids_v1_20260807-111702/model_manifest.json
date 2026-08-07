@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "model_id": "kids_v1-20260807-111702",
+  "architecture": "independent_gesture_classifier",
+  "model_file": "models/gesture_recognizer.task",
+  "model_sha256": "c92051b7305ee0b22bd4eaf0625b2cd54fe0fd39f6ee373ca2a33f0632ee94e1",
+  "model_size_bytes": 8462986,
+  "delivery": {
+    "zip_root_entries": [
+      "model_manifest.json",
+      "models/"
+    ]
+  },
+  "created_at": "2026-08-07T03:18:29.925123+00:00",
+  "mediapipe_model_maker_version": "0.2.1.4",
+  "labels": [
+    "none",
+    "closed_fist",
+    "finger_heart",
+    "gesture_666",
+    "ok",
+    "open_palm",
+    "thumb_up",
+    "victory"
+  ],
+  "required_labels": [
+    "none"
+  ],
+  "target_labels": [
+    "closed_fist",
+    "finger_heart",
+    "gesture_666",
+    "ok",
+    "open_palm",
+    "thumb_up",
+    "victory"
+  ],
+  "background_label": "none",
+  "training": {
+    "epochs": 20,
+    "batch_size": 8,
+    "learning_rate": 0.001,
+    "dropout_rate": 0.05,
+    "layer_widths": [],
+    "train_fraction": 0.8,
+    "validation_fraction": 0.1,
+    "test_fraction": 0.09999999999999995,
+    "min_detection_confidence": 0.5,
+    "seed": 42
+  },
+  "evaluation": {
+    "loss": 0.3118833601474762,
+    "accuracy": 0.8520709872245789
+  },
+  "reused_components": [
+    "palm_detector",
+    "hand_landmarker",
+    "gesture_embedder"
+  ],
+  "unity_top5_required": false
+}

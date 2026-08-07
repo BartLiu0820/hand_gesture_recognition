@@ -31,7 +31,8 @@
 4. `none` 与至少一个目标类别均达到最低样本量 → 系统允许训练。
 5. 配置模型名和训练参数 → 固定版本环境启动训练。
 6. 训练成功 → 导出独立 `.task` 与 `model_manifest.json`。
-7. 选择模型测试 → 页面展示该模型的最终分类和真实 Top 5，官方模型仅作独立基线。
+7. 打包 Unity 交付物 → ZIP 根目录只保留 `model_manifest.json` 和内含正式 `.task` 的 `models/`。
+8. 选择模型测试 → 页面展示该模型的最终分类和真实 Top 5，官方模型仅作独立基线。
 
 ### 异常流程
 
@@ -88,6 +89,14 @@
 - IF 展示 Top 5，THEN 所有分数来自该模型同一分类头，不合并官方基线分数。
 - IF Unity 不需要 Top 5，THEN 只交付最终原始标签与真实 score。
 
+### Unity 交付规则
+
+- IF 打包 Unity 交付物，THEN ZIP 根目录只包含 `model_manifest.json` 和 `models/` 两项。
+- IF 写入 `models/`，THEN 只放入当次正式模型 `gesture_recognizer.task`。
+- IF 生成清单，THEN `model_manifest.json` 必须记录模型相对路径、标签集合、背景标签、文件大小和 SHA-256。
+- ZIP 不包含 `.bytes` 副本、标签映射表、接入说明、校验文件、验收素材或训练中间文件。
+- Unity 侧如需 `.bytes` 扩展名、业务标签映射、阈值或防抖配置，由 Unity 工程自身管理，不再作为模型 ZIP 交付物。
+
 ---
 
 ## 数据字段
@@ -100,6 +109,9 @@
 | 模型名称 | 用户输入 | 导出目录名 | 否 | 字母、数字、`_`、`-` |
 | 训练参数 | 用户输入 | Model Maker HParams | 是 | 页面规定范围 |
 | 模型标签快照 | 系统计算 | `model_manifest.json` | 是 | 按实际模型元数据顺序记录 |
+| 交付模型路径 | 系统计算 | `model_manifest.json` → ZIP | 是 | 固定为 `models/gesture_recognizer.task` |
+| 模型文件大小 | 系统计算 | `.task` → `model_manifest.json` | 是 | 以 byte 记录 |
+| 模型 SHA-256 | 系统计算 | `.task` → `model_manifest.json` | 是 | 64 位小写十六进制字符串 |
 | 真实 Top 5 | 系统计算 | 本地测试接口 | 否 | 同一分类头最多 5 条 |
 
 ---
@@ -124,6 +136,7 @@
 - 不从已有模型继续增量训练；每次从当前数据重新训练分类头。
 - 不强制 Unity 接入 Top 5。
 - 不训练手掌检测器、关键点模型和手势嵌入器。
+- Unity 模型 ZIP 不包含 `.bytes` 副本、标签映射、接入说明、独立校验文件和验收材料；这些内容由 Unity 工程或协作流程单独管理。
 
 **待后续迭代**：
 

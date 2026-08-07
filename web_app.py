@@ -92,7 +92,11 @@ def create_app() -> Flask:
             "label": label,
             "count": len(files),
             "items": [
-                {"name": item.name, "url": f"/api/samples/{label}/{item.name}"}
+                {
+                    "name": item.name,
+                    "url": f"/api/samples/{label}/{item.name}",
+                    "source": "upload" if item.name.startswith("upload-") else "camera",
+                }
                 for item in files[:40]
             ],
         })
@@ -111,7 +115,8 @@ def create_app() -> Flask:
         frame = decode_data_image(payload.get("image", ""))
         label_dir = DATA_DIR / label
         label_dir.mkdir(parents=True, exist_ok=True)
-        filename = f"{time.time_ns()}-{uuid.uuid4().hex[:6]}.jpg"
+        prefix = "upload-" if payload.get("source") == "upload" else ""
+        filename = f"{prefix}{time.time_ns()}-{uuid.uuid4().hex[:6]}.jpg"
         target = label_dir / filename
         if not cv2.imwrite(str(target), frame, [cv2.IMWRITE_JPEG_QUALITY, 92]):
             return api_error("图片保存失败。", 500)

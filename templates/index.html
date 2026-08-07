@@ -78,6 +78,8 @@
           <div class="camera-actions">
             <button id="startCaptureCamera" class="button secondary">开启摄像头</button>
             <button id="captureOnce" class="button primary" disabled>采集一张</button>
+            <button id="uploadSamples" class="button ghost" type="button">上传照片</button>
+            <input id="sampleUpload" type="file" accept="image/*" multiple hidden>
           </div>
           <div class="auto-capture">
             <label class="switch-row">
@@ -114,7 +116,7 @@
         </aside>
         <article class="gallery-card">
           <div class="card-head"><div><p class="eyebrow">RECENT CAPTURES</p><h3 id="galleryTitle">none 的最近样本</h3></div><span id="galleryCount" class="soft-badge">0 张</span></div>
-          <div id="sampleGallery" class="sample-gallery"><p class="empty-state">还没有样本，开启摄像头开始采集。</p></div>
+          <div id="sampleGallery" class="sample-gallery"><p class="empty-state">还没有样本，可开启摄像头拍摄或上传本地照片。</p></div>
         </article>
       </div>
     </section>

@@ -57,6 +57,17 @@ class WebAppApiTest(unittest.TestCase):
         response = self.client.delete("/api/labels/none")
         self.assertEqual(400, response.status_code)
 
+    def test_uploaded_sample_keeps_source_for_gallery_orientation(self):
+        response = self.client.post(
+            "/api/samples/none",
+            json={"image": self.image_data_url(), "source": "upload"},
+        )
+        self.assertEqual(201, response.status_code)
+        self.assertTrue(response.json["name"].startswith("upload-"))
+
+        response = self.client.get("/api/samples/none")
+        self.assertEqual("upload", response.json["items"][0]["source"])
+
     def test_canonical_label_normalization(self):
         self.assertEqual("none", web_app.normalize_label("None"))
         self.assertEqual("Thumb_Up", web_app.normalize_label("Thumb_Up"))

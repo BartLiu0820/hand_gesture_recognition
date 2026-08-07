@@ -8,11 +8,12 @@
     "size_bytes": 8459826,
     "sha256": "20db31e5c2cf148703124440d8b946ce11ac799305541a1d59af5c1e4e940695"
   },
-  "unity_model": {
-    "path": "unity/ai/mediapipe/gesture_recognizer.bytes",
-    "size_bytes": 8459826,
-    "sha256": "20db31e5c2cf148703124440d8b946ce11ac799305541a1d59af5c1e4e940695",
-    "note": "Binary-identical copy of the .task model, renamed for Unity TextAsset loading."
+  "delivery": {
+    "zip_root_entries": [
+      "model_manifest.json",
+      "models/"
+    ],
+    "model_path": "models/gesture_recognizer.task"
   },
   "labels": [
     "none",

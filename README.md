@@ -248,6 +248,16 @@ python train.py \
 
 以后替换到 Android、iOS、Web 或其他使用 MediaPipe Gesture Recognizer Tasks API 的地方时，部署的也是这个 `.task` 文件。
 
+Unity 交付 ZIP 采用最小结构，根目录只包含两项：
+
+```text
+model_manifest.json
+models/
+└── gesture_recognizer.task
+```
+
+`.bytes` 副本、标签映射、接入说明和验收材料不再放入模型 ZIP，由 Unity 工程或协作流程单独管理。
+
 完整的当前功能、标签规则和 Unity 交付清单见 [项目功能与 Unity 交付说明](项目功能与Unity交付说明.md)。
 
 ## 5. 目录与本地产物

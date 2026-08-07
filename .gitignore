@@ -3,7 +3,12 @@ __pycache__/
 *.py[cod]
 .DS_Store
 
-# Local data and generated models can be large or private.
-data/
+# Private local datasets must never be committed or pushed.
+/data/
+
+# Generated models can be large and are reproducible locally.
 models/*.task
 exported_model/
+
+# Local Xiaobu gesture source data; keep it out of commits and pushes.
+/小布gesture/

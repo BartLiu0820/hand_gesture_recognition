@@ -10,6 +10,7 @@ const state = {
   streamOwner: null,
   autoTimer: null,
   captureBusy: false,
+  uploadBusy: false,
   testTimer: null,
   predicting: false,
   lastJobSignature: "",
@@ -152,10 +153,10 @@ async function loadGallery() {
     const data = await api(`/api/samples/${encodeURIComponent(state.selectedLabel)}`);
     $("#galleryCount").textContent = `${data.count} 张`;
     if (!data.items.length) {
-      gallery.innerHTML = '<p class="empty-state">还没有样本，开启摄像头开始采集。</p>';
+      gallery.innerHTML = '<p class="empty-state">还没有样本，可开启摄像头拍摄或上传本地照片。</p>';
       return;
     }
-    gallery.innerHTML = data.items.map((item) => `<figure class="sample-item">
+    gallery.innerHTML = data.items.map((item) => `<figure class="sample-item ${item.source === "upload" ? "uploaded" : ""}">
       <img src="${item.url}" alt="${escapeHtml(state.selectedLabel)} 手势样本" loading="lazy">
       <button type="button" data-name="${escapeHtml(item.name)}" aria-label="删除这张样本">×</button>
     </figure>`).join("");
@@ -250,6 +251,62 @@ async function captureSample(silent = false) {
     toast(error.message, true);
   } finally {
     state.captureBusy = false;
+  }
+}
+
+function imageFileData(file, maxDimension = 1600, quality = .9) {
+  if (!file.type.startsWith("image/")) return Promise.reject(new Error(`${file.name} 不是图片文件。`));
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error(`${file.name} 无法读取，请换一张图片。`));
+    };
+    image.src = objectUrl;
+  });
+}
+
+async function uploadSamples(files) {
+  if (state.uploadBusy || !files.length) return;
+  state.uploadBusy = true;
+  const label = state.selectedLabel;
+  const button = $("#uploadSamples");
+  button.disabled = true;
+  let saved = 0;
+  const errors = [];
+  try {
+    for (const [index, file] of [...files].entries()) {
+      button.textContent = `上传中 ${index + 1}/${files.length}`;
+      try {
+        const image = await imageFileData(file);
+        await api(`/api/samples/${encodeURIComponent(label)}`, {
+          method: "POST", body: JSON.stringify({ image, source: "upload" }),
+        });
+        saved += 1;
+      } catch (error) {
+        errors.push(error.message);
+      }
+    }
+    await refreshDataset();
+    if (saved) toast(`已上传 ${saved} 张照片到 ${label}${errors.length ? `，${errors.length} 张失败` : ""}`, Boolean(errors.length));
+    else toast(errors[0] || "没有可上传的照片。", true);
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    state.uploadBusy = false;
+    button.disabled = false;
+    button.textContent = "上传照片";
+    $("#sampleUpload").value = "";
   }
 }
 
@@ -506,6 +563,8 @@ function wireEvents() {
     try { await startCamera("capture"); } catch (error) { toast(error.message, true); }
   });
   $("#captureOnce").addEventListener("click", () => captureSample());
+  $("#uploadSamples").addEventListener("click", () => $("#sampleUpload").click());
+  $("#sampleUpload").addEventListener("change", (event) => uploadSamples(event.target.files));
   $("#autoCaptureToggle").addEventListener("change", (event) => event.target.checked ? startAutoCapture() : stopAutoCapture());
   $("#captureInterval").addEventListener("change", () => { if (state.autoTimer) startAutoCapture(); });
   $("#buildEnvironment").addEventListener("click", async () => {
